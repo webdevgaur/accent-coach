@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Accent Coach Test</title>
+</head>
+    <body>
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+            import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+            import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+
+            // Initialize Firebase
+            const app = initializeApp({
+                apiKey: "AIzaSyDM10wmsbtO_qoXpdXMt2V07EzvKCtcaQk",
+                authDomain: "accent-coach-dev.firebaseapp.com",
+                projectId: "accent-coach-dev",
+                storageBucket: "accent-coach-dev.firebasestorage.app",
+                messagingSenderId: "408191784535",
+                appId: "1:408191784535:web:94731310044e34aba33512"
+            });
+
+            const auth = getAuth(app);
+            const functions = getFunctions(app, "us-central1");
+
+            // 2. Register user via callable
+            // const registerUser = httpsCallable(functions, "registerUser");
+            // registerUser({email: "something1@other.com", password: "Test123!"})
+            //     .then(res => console.log("registered uid", res.data.uid))
+            //     .catch(console.error);
+
+            // 3. Sign in
+            signInWithEmailAndPassword(auth, "something1@other.com", "Test123!")
+                .then(() => console.log("signed in!"))
+                .catch(console.error);
+
+            // 4. Verify token
+            const verify = httpsCallable(functions, "verifyToken");
+            verify().then(res => console.log("server authenticated uid", res.data.uid));
+        </script>
+    </body>
+
+</html>
