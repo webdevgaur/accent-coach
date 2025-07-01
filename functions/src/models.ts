@@ -5,8 +5,8 @@ export interface UserDoc {
     xp: number;
     streak: number;
     createdAt: number;
-    lastLogin: Date;
-    lastActive: Date;
+    lastLogin?: Date;
+    lastActive?: Date;
 }
 
 export interface LessonDoc {

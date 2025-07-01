@@ -22,3 +22,4 @@ export const helloWorld = onRequest((request, response) => {
 });
 
 export * from "./auth";
+export * from "./userTriggers";

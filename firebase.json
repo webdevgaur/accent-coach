@@ -10,7 +10,7 @@
   },
   "functions": {
     "source": "functions",
-    "runtime": "nodejs22"
+    "runtime": "nodejs18"
   },
   "hosting": {
     "public": "public",
@@ -23,6 +23,9 @@
   "emulators": {
     "functions": {
       "port": 5001
+    },
+    "auth": {
+      "port": 9099
     },
     "firestore": {
       "port": 8080
