@@ -7,8 +7,9 @@
     <body>
         <script type="module">
             import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-            import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+            import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
             import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+            import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
             // Initialize Firebase
             const app = initializeApp({
@@ -21,21 +22,77 @@
             });
 
             const auth = getAuth(app);
+            const db = getFirestore(app);
             const functions = getFunctions(app, "us-central1");
+            const regUser   = httpsCallable(functions, "registerUser");
+            const verify    = httpsCallable(functions, "verifyToken");
 
-            // 2. Register user via callable
-            // const registerUser = httpsCallable(functions, "registerUser");
-            // registerUser({email: "something1@other.com", password: "Test123!"})
-            //     .then(res => console.log("registered uid", res.data.uid))
-            //     .catch(console.error);
+             /* ---------- 2. Utility helpers ---------- */
+            async function makeUser(email) {
+                const { data:{ uid }} = await regUser({ email, password:"Test123!"});
+                console.log("registered:", email, uid);
+                return uid;
+            }
+            async function login(email) {
+                await signInWithEmailAndPassword(auth, email, "Test123!");
+                console.log("signed-in:", email, "uid:", auth.currentUser.uid);
+            }
+            async function logout() { await signOut(auth); }
 
-            // 3. Sign in
-            signInWithEmailAndPassword(auth, "something1@other.com", "Test123!")
-                .then(() => console.log("signed in!"))
-                .catch(console.error);
+            /* ---------- 3. The rule-tests ---------- */
+            async function runTests() {
+                /* 3-A  register two accounts */
+                const uidA = await makeUser("userA@test.com");
+                const uidB = await makeUser("userB@test.com");
+
+                /* 3-B  Sign-in as A and read own profile  ✅ */
+                await login("userA@test.com");
+                console.log("READ own profile → should SUCCEED");
+                console.log(await getDoc(doc(db, "users", uidA)).then(snap => snap.data()));
+
+                /* 3-C  Read B’s profile  ❌ */
+                console.log("READ someone-else profile → should FAIL");
+                await getDoc(doc(db, "users", uidB))
+                .then(() => console.log("UNEXPECTED success!"))
+                .catch(err => console.error(err.code));              // expect permission-denied
+
+                /* 3-D  Write to lessons without admin  ❌ */
+                console.log("WRITE lessons without admin → should FAIL");
+                await setDoc(doc(db, "lessons", "HACK"), {prompt:"bad"})
+                .then(() => console.log("UNEXPECTED success!"))
+                .catch(err => console.error(err.code));              // expect permission-denied
+
+                /* 3-E  Write an attempt for A  ✅ */
+                console.log("WRITE own attempt → should SUCCEED");
+                await setDoc(
+                doc(db, "attempts", uidA, "L1_TH", Date.now().toString()),
+                { audioPath:"test.wav", createdAt:Date.now() }
+                ).then(() => console.log("write OK"));
+
+                /* 3-F  Write an attempt pretending to be B  ❌ */
+                console.log("WRITE attempt for B → should FAIL");
+                await setDoc(
+                doc(db, "attempts", uidB, "L1_TH", Date.now().toString()),
+                { audioPath:"evil.wav", createdAt:Date.now() }
+                )
+                .then(() => console.log("UNEXPECTED success!"))
+                .catch(err => console.error(err.code));                // expect permission-denied
+
+                /* 3-G  Public lesson read  ✅ */
+                console.log("READ lesson L1_TH → should SUCCEED");
+                await getDoc(doc(db, "lessons", "L1_TH"))
+                .then(snap => console.log(snap.data()))
+                .catch(err => console.error(err));
+
+                /* 3-H done */
+                await logout();
+                console.log("All tests finished");
+            }
+
+            runTests().catch(console.error);
 
             // 4. Verify token
-            const verify = httpsCallable(functions, "verifyToken");
+            // const verify = httpsCallable(functions, "verifyToken");
             verify().then(res => console.log("server authenticated uid", res.data.uid));
         </script>
     </body>
