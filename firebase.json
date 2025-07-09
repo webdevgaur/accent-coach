@@ -10,7 +10,12 @@
   },
   "functions": {
     "source": "functions",
-    "runtime": "nodejs18"
+    "runtime": "nodejs18",
+    "functions": {
+      "getUploadUrl": {
+        "serviceAccountEmail": "accent-coach-dev@appspot.gserviceaccount.com"
+      }
+    }
   },
   "hosting": {
     "public": "public",

@@ -1,0 +1,44 @@
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+
+const app = initializeApp({
+                apiKey: "AIzaSyDM10wmsbtO_qoXpdXMt2V07EzvKCtcaQk",
+                authDomain: "accent-coach-dev.firebaseapp.com",
+                projectId: "accent-coach-dev",
+                storageBucket: "accent-coach-dev.firebasestorage.app",
+                // storageBucket: "accent-coach-dev.appspot.com",
+                messagingSenderId: "408191784535",
+                appId: "1:408191784535:web:94731310044e34aba33512"
+            });
+const auth = getAuth(app);
+const fn   = httpsCallable(getFunctions(app,"us-central1"),"getUploadUrl");
+
+await signInWithEmailAndPassword(auth,"userA@test.com","Test123!");
+
+let chunks=[], recorder;
+window.startRec = async ()=>{
+  chunks = [];
+  const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+  recorder = new MediaRecorder(stream,{mimeType:"audio/webm"});
+  recorder.ondataavailable=e=>chunks.push(e.data);
+  recorder.start();
+}
+window.stopRec = async ()=>{
+  recorder.stop();
+  recorder.onstop = async ()=>{
+    const blob = new Blob(chunks,{type:"audio/webm"});
+    const buffer = await blob.arrayBuffer();
+    // 1. ask for signed URL
+    const {data:{url}} = await fn({lessonId:"L1_TH"});
+    console.log("uploading to",url);
+    // 2. PUT straight to Storage
+    await fetch(url,{method:"PUT",headers:{"Content-Type":"audio/webm"},body:buffer});
+    console.log("upload complete");
+  };
+}
+</script>
+
+<button onclick="startRec()">Start</button>
+<button onclick="stopRec()">Stop & Upload</button>

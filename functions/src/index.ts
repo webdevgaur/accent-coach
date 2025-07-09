@@ -23,3 +23,5 @@ export const helloWorld = onRequest((request, response) => {
 
 export * from "./auth";
 export * from "./userTriggers";
+export * from "./upload";
+export * from "./transcription";

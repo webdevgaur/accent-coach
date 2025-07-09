@@ -1,12 +1,14 @@
 rules_version = '2';
-
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if false;
+    // raw uploads – owner write, not public read
+    match /raw/{userId}/{lessonId}/{fileName} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if false;
+    }
+    // (future) publicly-cached lesson audio
+    match /tts/{fileName} {
+      allow read: if true;
     }
   }
 }

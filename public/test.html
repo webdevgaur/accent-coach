@@ -34,7 +34,11 @@
                 return uid;
             }
             async function login(email) {
-                await signInWithEmailAndPassword(auth, email, "Test123!");
+                await signInWithEmailAndPassword(auth, email, "Test123!").then(async (userCredential) => {
+                    const token = await userCredential.user.getIdToken();
+                    console.log('ID token:', token);
+                })
+                .catch(console.error);
                 console.log("signed-in:", email, "uid:", auth.currentUser.uid);
             }
             async function logout() { await signOut(auth); }
@@ -43,7 +47,7 @@
             async function runTests() {
                 /* 3-A  register two accounts */
                 const uidA = await makeUser("userA@test.com");
-                const uidB = await makeUser("userB@test.com");
+                // const uidB = await makeUser("userB@test.com");
 
                 /* 3-B  Sign-in as A and read own profile  ✅ */
                 await login("userA@test.com");
@@ -85,7 +89,7 @@
                 .catch(err => console.error(err));
 
                 /* 3-H done */
-                await logout();
+                // await logout();
                 console.log("All tests finished");
             }
 
