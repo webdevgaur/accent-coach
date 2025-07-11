@@ -69,11 +69,25 @@ export const transcribeAudio = onMessagePublished(
       score,
       createdAt: ts,
     };
-    await db.collection("attempts")
-            .doc(uid).collection(lessonId)
-            .doc(ts.toString())
-            .set(attempt);
+    try{
+        console.log('Attempt payload:', attempt);
+        await db.collection("attempts")
+                    .doc(uid).collection(lessonId)
+                    .doc(ts.toString())
+                    .set({
+                        audioPath: objectPath,
+                        transcript,
+                        score,
+                        createdAt: ts,
+                        debug: true
+                    });
 
+        console.log(`Attempt written to firestore successfully: attempts/${uid}/${lessonId}/${ts}`);
+    } catch(err) {
+        console.error(`Failed to write attempt for ${objectPath}`, err);
+        throw new Error(`Failed to write attempt: ${err}`);
+    }
+    
     console.log(`Transcribed ${objectPath} → score ${score}%`);
   }
 );

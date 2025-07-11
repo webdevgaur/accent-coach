@@ -25,3 +25,4 @@ export * from "./auth";
 export * from "./userTriggers";
 export * from "./upload";
 export * from "./transcription";
+export * from "./result";
